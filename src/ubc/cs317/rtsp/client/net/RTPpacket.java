@@ -200,18 +200,18 @@ public class RTPpacket{
 	//--------------------------
 	public void printheader()
 	{
-	    for (int i=0; i < (HEADER_SIZE-4); i++)
-	      {
-		for (int j = 7; j>=0 ; j--)
-		  if (((1<<j) & header[i] ) != 0)
-		    System.out.print("1");
-		else
-		  System.out.print("0");
-		System.out.print(" ");
-	      }
+		for (int i=0; i < (HEADER_SIZE-4); i++)
+		{
+			for (int j = 7; j>=0 ; j--)
+				if (((1<<j) & header[i] ) != 0)
+					System.out.print("1");
+				else
+					System.out.print("0");
+			System.out.print(" ");
+		}
 
-	    System.out.println();
-		 
+		System.out.println();
+
 	}
 
 	//return the unsigned value of 8-bit integer nb
@@ -222,5 +222,15 @@ public class RTPpacket{
 			return(256+nb);
 	}
 
+	public boolean getMarker() {
+		if (this.Marker==0) {
+			return false;
+		}
+		if (this.Marker==1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 
 }

@@ -44,7 +44,7 @@ public class RTSPConnection {
 	private Session session;
 	private Timer rtpTimer;
 	// RTP
-	DatagramPacket rcvdp; // UDP packet received from the server
+	DatagramPacket packet; // UDP packet received from the server
 	static DatagramSocket RTPsocket; // socket to be used to send and receive
 	// UDP packets
 	static int RTP_RCV_PORT = 24400; // port where the client will receive the
@@ -101,7 +101,7 @@ public class RTSPConnection {
 
 			RTSPBufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			RTSPBufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-			
+
 			state = INIT;
 			System.out.println("New RTSP state: INIT");
 		} catch (Exception e) {
@@ -186,17 +186,18 @@ public class RTSPConnection {
 			if (this.readRTSPResponse() != 200) {
 				System.out.println("Invalid Server Response");
 			}
-//			else 
-//			{
-//				//change RTSP state and print out new state
-//				state= PLAYING;
-//				System.out.println("New RTSP state: PLAYING");
-//
-//				//start the timer
-//				this.startRTPTimer();
-//			}
+			else 
+			{
+				//change RTSP state and print out new state
+				state= PLAYING;
+				System.out.println("New RTSP state: PLAYING");
+				
+//				this.receiveRTPPacket();
+				//start the timer
+				this.startRTPTimer();
+			}
 		}//else if state != READY then do nothing
-		System.out.println("AIWFAOWIEJFAWOIEJF");
+		//		System.out.println("AIWFAOWIEJFAWOIEJF");
 	}
 
 	/**
@@ -226,32 +227,38 @@ public class RTSPConnection {
 	// private void receiveRTPPacket() {
 	private void receiveRTPPacket() {
 		// TODO
-
-		rcvdp = new DatagramPacket(buf, buf.length);
-		System.out.println(rcvdp.toString());
+		
+		this.buf = new byte[this.BUFFER_LENGTH];
+		this.packet = new DatagramPacket(this.buf, this.buf.length);
+//		System.out.println(packet.toString());
 		try {
 			//receive the DP from the socket:
-			RTPsocket.receive(rcvdp);
+			this.RTPsocket.receive(this.packet);
 
 			//create an RTPpacket object from the DP
-			RTPpacket rtp_packet = new RTPpacket(rcvdp.getData(), rcvdp.getLength());
-
-			sizem=sizem+rtp_packet.getpayload_length();
-			dt=tc-rtp_packet.gettimestamp();
-			tc=rtp_packet.gettimestamp();
-
-			System.out.println(" Transmission rate: "+(sizem/tc)+" KB/s - Burst rate: "+(rtp_packet.getpayload_length()/(-dt))+ "KB/s");
-
-			System.out.println("Got RTP packet with SeqNum # "+rtp_packet.getsequencenumber()+" TimeStamp "+rtp_packet.gettimestamp()+" ms, of type "+rtp_packet.getpayloadtype());
-			rtp_packet.printheader();
-			int payload_length = rtp_packet.getpayload_length();
-
-			byte [] payload = new byte[payload_length];
-			rtp_packet.getpayload(payload);
-			
-			Frame f = parseRTPPacket(buf);
+			RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
+//			rtpp.printheader();
+			System.out.println(rtpp.SequenceNumber);
+//			Frame f = parseRTPPacket(rtpp.payload);
+			Frame f = new Frame((byte)rtpp.PayloadType, rtpp.getMarker(), (short)rtpp.SequenceNumber, rtpp.TimeStamp, rtpp.payload);;
+			session.processReceivedFrame(f);
+//
+//			sizem=sizem+rtp_packet.getpayload_length();
+//			dt=tc-rtp_packet.gettimestamp();
+//			tc=rtp_packet.gettimestamp();
+//
+//			System.out.println(" Transmission rate: "+(sizem/tc)+" KB/s - Burst rate: "+(rtp_packet.getpayload_length()/(-dt))+ "KB/s");
+//
+//			System.out.println("Got RTP packet with SeqNum # "+rtp_packet.getsequencenumber()+" TimeStamp "+rtp_packet.gettimestamp()+" ms, of type "+rtp_packet.getpayloadtype());
+//			rtp_packet.printheader();
+//			int payload_length = rtp_packet.getpayload_length();
+//
+//			byte [] payload = new byte[payload_length];
+//			rtp_packet.getpayload(payload);
+//
+//			Frame f = parseRTPPacket(buf);
 		} catch (Exception e) {
-			System.out.print(e);
+//			System.out.print(e);
 		}
 
 		return;
@@ -331,9 +338,9 @@ public class RTSPConnection {
 			//change RTSP state and print out new state
 			state=INIT;
 			System.out.println("New RTSP state:INIT");
-
+			this.RTPsocket.close();
 			//stop the timer
-			rtpTimer.cancel();
+//			rtpTimer.cancel();
 
 			//exit
 			System.exit(0);
@@ -348,9 +355,12 @@ public class RTSPConnection {
 	public synchronized void closeConnection() {
 		// TODO
 		try {
-			RTSPBufferedReader.close();
-			RTSPBufferedWriter.close();
+			this.RTSPBufferedReader.close();
+			this.RTSPBufferedWriter.close();
+			this.RTPsocket.close();
 			socket.close();
+			
+			System.out.println("ALL CONNECTIONS CLOSED");
 		} catch (Exception e) {
 			System.out.println(e);
 		}
@@ -374,22 +384,28 @@ public class RTSPConnection {
 
 	private void sendRTSPRequest(String requestType) {
 		try {
+			System.out.println("---------START OF REQUEST---------");
 			// write request line
-			RTSPBufferedWriter.write(requestType + " "
-					+ videoFileName + " " + "RTSP/1.0" + CRLF);
-
+			String holder =requestType + " "+ videoFileName + " " + "RTSP/1.0" + CRLF;
+			this.RTSPBufferedWriter.write(holder);
+			System.out.print(holder);
 			// write CSeq line;
-			RTSPBufferedWriter.write("Cseq: " + RTSPSeqNo + CRLF);
+			holder = "Cseq: " + RTSPSeqNo + CRLF;
+			this.RTSPBufferedWriter.write(holder);
+			System.out.print(holder);
 			// Check if state is init
 			if (state == INIT) {
-				RTSPBufferedWriter.write("TRANSPORT: RTP/UDP; client_port= "
-						+ RTP_RCV_PORT + CRLF);
+				holder = "TRANSPORT: RTP/UDP; client_port= "+ RTP_RCV_PORT + CRLF + CRLF;
+				this.RTSPBufferedWriter.write(holder);
+				System.out.print(holder);
 			} else {
-				RTSPBufferedWriter.write("Session: " + RTSPid + CRLF);
+				holder = "Session: " + RTSPid + CRLF+CRLF;
+				this.RTSPBufferedWriter.write(holder);
+				System.out.print(holder);
 			}
 			//			System.out.println(RTSPBufferedWriter.toString());
-			RTSPBufferedWriter.newLine();
-			RTSPBufferedWriter.flush();
+			System.out.println("------------END OF REQUEST------------");
+			this.RTSPBufferedWriter.flush();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -398,48 +414,79 @@ public class RTSPConnection {
 	private int readRTSPResponse() {
 		int reply_code = 0;
 
-//		try {
-			String StatusLine;
-			try {
-				StatusLine = RTSPBufferedReader.readLine();
+		String StatusLine;
+		try {
+			System.out.println("---------START OF RESPONSE-------");
+			// Server Response
+			StatusLine = this.RTSPBufferedReader.readLine();
+			System.out.println(StatusLine);
+			
+			// Only try to read more lines if reply is 200
+			reply_code = this.parseStatusResponse(StatusLine);
+			if (reply_code == 200) {
+				// Cseq
+				StatusLine = this.RTSPBufferedReader.readLine();
 				System.out.println(StatusLine);
-				StatusLine= RTSPBufferedReader.readLine();
+				// Session ID
+				StatusLine = this.RTSPBufferedReader.readLine();
+				this.setRTSPid(StatusLine);
 				System.out.println(StatusLine);
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				StatusLine = this.RTSPBufferedReader.readLine();
+				System.out.println(StatusLine);
 			}
-//			StringTokenizer tokens = new StringTokenizer(StatusLine);
-//			tokens.nextToken(); // skip over the RTSP version
-//			reply_code = Integer.parseInt(tokens.nextToken());
-//
-//			// if reply code is OK get and print the 2 other lines
-//			if (reply_code == 200) {
-//				String SeqNumLine = RTSPBufferedReader.readLine();
-//				System.out.println(SeqNumLine);
-//
-//				String SessionLine = RTSPBufferedReader.readLine();
-//				System.out.println(SessionLine);
-//
-//				// if state == INIT gets the Session Id from the SessionLine
-//				if (state== INIT) {
-//					tokens = new StringTokenizer(SessionLine);
-//					tokens.nextToken(); // skip over the Session:
-//					RTSPid = Integer.parseInt(tokens.nextToken());
-//				}
-//				
-//			} else {
-//				String one = RTSPBufferedReader.readLine();
-//				System.out.println(one);
-//				String two = RTSPBufferedReader.readLine();
-//				System.out.println(two);
-//				String three = RTSPBufferedReader.readLine();
-//				System.out.println(three);
-//			}
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-		return (200);
+
+			System.out.println("---------END OF RESPONSE---------");
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			//				e.printStackTrace();
+		}
+		//			StringTokenizer tokens = new StringTokenizer(StatusLine);
+		//			tokens.nextToken(); // skip over the RTSP version
+		//			reply_code = Integer.parseInt(tokens.nextToken());
+		//
+		//			// if reply code is OK get and print the 2 other lines
+		//			if (reply_code == 200) {
+		//				String SeqNumLine = RTSPBufferedReader.readLine();
+		//				System.out.println(SeqNumLine);
+		//
+		//				String SessionLine = RTSPBufferedReader.readLine();
+		//				System.out.println(SessionLine);
+		//
+		//				// if state == INIT gets the Session Id from the SessionLine
+		//				if (state== INIT) {
+		//					tokens = new StringTokenizer(SessionLine);
+		//					tokens.nextToken(); // skip over the Session:
+		//					RTSPid = Integer.parseInt(tokens.nextToken());
+		//				}
+		//				
+		//			} else {
+		//				String one = RTSPBufferedReader.readLine();
+		//				System.out.println(one);
+		//				String two = RTSPBufferedReader.readLine();
+		//				System.out.println(two);
+		//				String three = RTSPBufferedReader.readLine();
+		//				System.out.println(three);
+		//			}
+		//		} catch (IOException e) {
+		//			e.printStackTrace();
+		//		}
+		return (reply_code);
+	}
+
+	private int parseStatusResponse(String s) {
+		int status;
+		StringTokenizer tokens = new StringTokenizer(s);
+		tokens.nextToken();
+		status = Integer.valueOf(tokens.nextToken());
+		return status;
+	}
+	private int setRTSPid(String s) {
+		StringTokenizer tokens = new StringTokenizer(s);
+		tokens.nextToken();
+		RTSPid = Integer.valueOf(tokens.nextToken());
+		return RTSPid;
 	}
 }
+
+
