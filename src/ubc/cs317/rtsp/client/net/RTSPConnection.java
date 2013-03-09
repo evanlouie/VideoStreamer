@@ -25,9 +25,15 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 
 import ubc.cs317.rtsp.client.exception.RTSPException;
 import ubc.cs317.rtsp.client.model.Frame;
@@ -77,6 +83,19 @@ public class RTSPConnection {
 	static String value="idle"; 
 	// TODO Add additional fields, if necessary
 
+	int lastReceivedSequenceNumber = -1;
+//	static Frame f;
+	static RTPpacket rtpp;
+	static TreeMap packetMap = new TreeMap();
+	static TreeMap packetMap2 = new TreeMap();
+	static ArrayList<RTPpacket> buffer1 = new ArrayList<RTPpacket>();
+	static ArrayList<RTPpacket> buffer2 = new ArrayList<RTPpacket>();
+	static Boolean fullB1 = false;
+	static Boolean fullB2 = false;
+	static int i = 0;
+	static final long deplay = 40;
+	static Timer playTimer = new Timer();
+	//	ArrayList packetList = new ArrayList<>
 	/**
 	 * Establishes a new connection with an RTSP server. No message is sent at
 	 * this point, and no stream is set up.
@@ -191,8 +210,8 @@ public class RTSPConnection {
 				//change RTSP state and print out new state
 				state= PLAYING;
 				System.out.println("New RTSP state: PLAYING");
-				
-//				this.receiveRTPPacket();
+
+				//				this.receiveRTPPacket();
 				//start the timer
 				this.startRTPTimer();
 			}
@@ -215,6 +234,7 @@ public class RTSPConnection {
 			}
 		}, 0, MINIMUM_DELAY_READ_PACKETS_MS);
 	}
+	
 
 	/**
 	 * Receives a single RTP packet and processes the corresponding frame. The
@@ -227,41 +247,78 @@ public class RTSPConnection {
 	// private void receiveRTPPacket() {
 	private void receiveRTPPacket() {
 		// TODO
-		
+
 		this.buf = new byte[this.BUFFER_LENGTH];
 		this.packet = new DatagramPacket(this.buf, this.buf.length);
-//		System.out.println(packet.toString());
 		try {
-			//receive the DP from the socket:
-			this.RTPsocket.receive(this.packet);
 
+			this.RTPsocket.receive(this.packet);
+			
 			//create an RTPpacket object from the DP
 			RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
-//			rtpp.printheader();
-			System.out.println(rtpp.SequenceNumber);
-//			Frame f = parseRTPPacket(rtpp.payload);
-			Frame f = new Frame((byte)rtpp.PayloadType, rtpp.getMarker(), (short)rtpp.SequenceNumber, rtpp.TimeStamp, rtpp.payload);;
-			session.processReceivedFrame(f);
-//
-//			sizem=sizem+rtp_packet.getpayload_length();
-//			dt=tc-rtp_packet.gettimestamp();
-//			tc=rtp_packet.gettimestamp();
-//
-//			System.out.println(" Transmission rate: "+(sizem/tc)+" KB/s - Burst rate: "+(rtp_packet.getpayload_length()/(-dt))+ "KB/s");
-//
-//			System.out.println("Got RTP packet with SeqNum # "+rtp_packet.getsequencenumber()+" TimeStamp "+rtp_packet.gettimestamp()+" ms, of type "+rtp_packet.getpayloadtype());
-//			rtp_packet.printheader();
-//			int payload_length = rtp_packet.getpayload_length();
-//
-//			byte [] payload = new byte[payload_length];
-//			rtp_packet.getpayload(payload);
-//
-//			Frame f = parseRTPPacket(buf);
-		} catch (Exception e) {
-//			System.out.print(e);
-		}
+			this.packetMap.put(rtpp.SequenceNumber, rtpp);
+			if(this.packetMap.size()>=50) {
+				Iterator it = this.packetMap.entrySet().iterator();
+				while(it.hasNext()) {
+					Map.Entry pairs = (Map.Entry) it.next();
+					RTPpacket temp = (RTPpacket) pairs.getValue();
+					System.out.println(temp.SequenceNumber);
+					Frame f = new Frame((byte)temp.PayloadType, temp.getMarker(), (short)temp.SequenceNumber, temp.TimeStamp, temp.payload);
+					session.processReceivedFrame(f);
+					Thread.sleep(40);
+				}
+				this.packetMap.clear();
+			}
+////			System.out.println(rtpp.SequenceNumber);
+//			Frame f = new Frame((byte)rtpp.PayloadType, rtpp.getMarker(), (short)rtpp.SequenceNumber, rtpp.TimeStamp, rtpp.payload);;
+//			session.processReceivedFrame(f);
+			
+
+
+		} catch (SocketTimeoutException e ) {
+
+		}catch (Exception e) {
+			System.out.print(e);
+		} 
 
 		return;
+
+	}
+
+	public void bufferedPlay(TreeMap<Integer, RTPpacket> buffer1, TreeMap<Integer, RTPpacket> buffer2) {
+		try {
+			this.buf = new byte[this.BUFFER_LENGTH];
+			this.packet = new DatagramPacket(this.buf, this.buf.length);
+
+			if(buffer1.isEmpty()) {
+				while(this.i<=40) {
+					this.RTPsocket.receive(this.packet);
+					this.rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
+					buffer1.put(this.rtpp.SequenceNumber, this.rtpp);
+					this.i++;
+				}
+				this.i=0;
+			}
+			while(!buffer1.isEmpty()) {
+				Iterator it = buffer1.entrySet().iterator();
+				while (it.hasNext()) {
+					Map.Entry pairs = (Map.Entry) it.next();
+					RTPpacket temp = (RTPpacket) pairs.getValue();
+					Frame f = new Frame((byte)temp.PayloadType, temp.getMarker(), (short)temp.SequenceNumber, temp.TimeStamp, temp.payload);
+					session.processReceivedFrame(f);
+
+					this.RTPsocket.receive(this.packet);
+					this.rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
+					buffer2.put(this.rtpp.SequenceNumber, this.rtpp);
+
+				}
+			}
+			buffer1.clear();
+			bufferedPlay(buffer2, buffer1);
+		} catch (SocketTimeoutException e ) {
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 
@@ -340,7 +397,7 @@ public class RTSPConnection {
 			System.out.println("New RTSP state:INIT");
 			this.RTPsocket.close();
 			//stop the timer
-//			rtpTimer.cancel();
+			rtpTimer.cancel();
 
 			//exit
 			System.exit(0);
@@ -359,7 +416,7 @@ public class RTSPConnection {
 			this.RTSPBufferedWriter.close();
 			this.RTPsocket.close();
 			socket.close();
-			
+
 			System.out.println("ALL CONNECTIONS CLOSED");
 		} catch (Exception e) {
 			System.out.println(e);
@@ -378,7 +435,7 @@ public class RTSPConnection {
 		System.out.println("parseRTPPacket");
 		// TODO
 		RTPpacket rtpp = new RTPpacket(packet, packet.length);
-//		Frame f = new Frame();
+		//		Frame f = new Frame();
 		return null; // Replace with a proper Frame
 	}
 
@@ -420,7 +477,7 @@ public class RTSPConnection {
 			// Server Response
 			StatusLine = this.RTSPBufferedReader.readLine();
 			System.out.println(StatusLine);
-			
+
 			// Only try to read more lines if reply is 200
 			reply_code = this.parseStatusResponse(StatusLine);
 			if (reply_code == 200) {
