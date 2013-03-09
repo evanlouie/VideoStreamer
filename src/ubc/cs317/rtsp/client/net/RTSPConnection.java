@@ -252,22 +252,55 @@ public class RTSPConnection {
 		this.packet = new DatagramPacket(this.buf, this.buf.length);
 		try {
 
-			this.RTPsocket.receive(this.packet);
-			
+
 			//create an RTPpacket object from the DP
-			RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
-			this.packetMap.put(rtpp.SequenceNumber, rtpp);
-			if(this.packetMap.size()>=50) {
+//			this.RTPsocket.receive(this.packet);
+//			RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
+			
+			while (this.packetMap.size()<=50) {
+				this.RTPsocket.receive(this.packet);
+				RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
+				this.packetMap.put(rtpp.SequenceNumber, rtpp);
+			} 
+			while (this.packetMap2.size()<=50) {
+				this.RTPsocket.receive(this.packet);
+				RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
+				this.packetMap2.put(rtpp.SequenceNumber, rtpp);
+			}
+			
+			if(!this.packetMap.isEmpty()) {
 				Iterator it = this.packetMap.entrySet().iterator();
 				while(it.hasNext()) {
+					this.RTPsocket.receive(this.packet);
+					RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
+					this.packetMap2.put(rtpp.SequenceNumber, rtpp);
+
 					Map.Entry pairs = (Map.Entry) it.next();
 					RTPpacket temp = (RTPpacket) pairs.getValue();
 					System.out.println(temp.SequenceNumber);
 					Frame f = new Frame((byte)temp.PayloadType, temp.getMarker(), (short)temp.SequenceNumber, temp.TimeStamp, temp.payload);
 					session.processReceivedFrame(f);
+					
 					Thread.sleep(40);
 				}
 				this.packetMap.clear();
+			}
+			if(!this.packetMap2.isEmpty()) {
+				Iterator it = this.packetMap2.entrySet().iterator();
+				while(it.hasNext()) {
+					this.RTPsocket.receive(this.packet);
+					RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
+					this.packetMap.put(rtpp.SequenceNumber, rtpp);
+
+					Map.Entry pairs = (Map.Entry) it.next();
+					RTPpacket temp = (RTPpacket) pairs.getValue();
+					System.out.println(temp.SequenceNumber);
+					Frame f = new Frame((byte)temp.PayloadType, temp.getMarker(), (short)temp.SequenceNumber, temp.TimeStamp, temp.payload);
+					session.processReceivedFrame(f);
+					
+					Thread.sleep(40);
+				}
+				this.packetMap2.clear();
 			}
 ////			System.out.println(rtpp.SequenceNumber);
 //			Frame f = new Frame((byte)rtpp.PayloadType, rtpp.getMarker(), (short)rtpp.SequenceNumber, rtpp.TimeStamp, rtpp.payload);;
