@@ -17,9 +17,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -50,12 +53,12 @@ public class RTSPConnection {
 	private Session session;
 	private Timer rtpTimer;
 	// RTP
-	DatagramPacket packet; // UDP packet received from the server
+	static DatagramPacket packet; // UDP packet received from the server
 	static DatagramSocket RTPsocket; // socket to be used to send and receive
 	// UDP packets
 	static int RTP_RCV_PORT = 24400; // port where the client will receive the
 	// RTP packets
-	byte[] buf; // buffer used to store data received from the server
+	static byte[] buf; // buffer used to store data received from the server
 	static int countpk = 0;
 
 	// RTSP
@@ -84,10 +87,10 @@ public class RTSPConnection {
 	// TODO Add additional fields, if necessary
 
 	int lastReceivedSequenceNumber = -1;
-//	static Frame f;
+	//	static Frame f;
 	static RTPpacket rtpp;
-	static TreeMap packetMap = new TreeMap();
-	static TreeMap packetMap2 = new TreeMap();
+	static TreeMap<Integer, RTPpacket> packetMap = new TreeMap<Integer, RTPpacket>();
+	static TreeMap<Integer, RTPpacket> packetMap2 = new TreeMap<Integer, RTPpacket>();
 	static ArrayList<RTPpacket> buffer1 = new ArrayList<RTPpacket>();
 	static ArrayList<RTPpacket> buffer2 = new ArrayList<RTPpacket>();
 	static Boolean fullB1 = false;
@@ -95,7 +98,21 @@ public class RTSPConnection {
 	static int i = 0;
 	static final long deplay = 40;
 	static Timer playTimer = new Timer();
-	//	ArrayList packetList = new ArrayList<>
+	static int threadCount = 0;
+	static long startTime = 0;
+	static long endTime = 0;
+	static long elapsedPlayTime = 0;
+	static long howMany25Seconds = 0;
+	static long mean25SFrames = 0;
+	static double alpha = 0.125;
+	static double estimatedRTT = 0;
+	static double mostRecentRTT = 0;
+	static double meanRTT = 0;
+	static double highestRTT = 0;
+	static ArrayList<Double> RTT = new ArrayList<Double>();
+	static boolean isPlaying = false;
+	static RTPpacket lastPacket=null;
+
 	/**
 	 * Establishes a new connection with an RTSP server. No message is sent at
 	 * this point, and no stream is set up.
@@ -114,6 +131,11 @@ public class RTSPConnection {
 			throws RTSPException {
 
 		this.session = session;
+		try {
+			System.setOut(new PrintStream(new File("output-file.txt")));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		try {
 			InetAddress ServerIPAddr = InetAddress.getByName(server);
 			socket = new Socket(ServerIPAddr, port);
@@ -214,6 +236,9 @@ public class RTSPConnection {
 				//				this.receiveRTPPacket();
 				//start the timer
 				this.startRTPTimer();
+				startTime = System.currentTimeMillis();
+				//				this.startPlayTimer();
+
 			}
 		}//else if state != READY then do nothing
 		//		System.out.println("AIWFAOWIEJFAWOIEJF");
@@ -226,6 +251,7 @@ public class RTSPConnection {
 	 */
 	private void startRTPTimer() {
 		buf = new byte[BUFFER_LENGTH];
+		packet = new DatagramPacket(buf, buf.length);
 		rtpTimer = new Timer();
 		rtpTimer.schedule(new TimerTask() {
 			@Override
@@ -234,8 +260,34 @@ public class RTSPConnection {
 			}
 		}, 0, MINIMUM_DELAY_READ_PACKETS_MS);
 	}
-	
+	private synchronized void startPlayTimer() {
+		playTimer = new Timer();
+		playTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				playBuffer();
+			}
+		}, 0, 40);
+	}
 
+	private synchronized void playBuffer() {
+		if(isPlaying==true) {
+				Entry<Integer, RTPpacket> pair = packetMap.firstEntry();
+				Integer k = pair.getKey();
+				RTPpacket p = pair.getValue();
+				Frame f = new Frame((byte)p.PayloadType, p.getMarker(), (short)p.SequenceNumber, p.TimeStamp, p.payload);
+				session.processReceivedFrame(f);
+				packetMap.remove(k);
+				//			System.out.println(packetMap.size());
+				System.out.println("Buffer Size: "+packetMap.size());
+				if(packetMap.size()==0)isPlaying=false;
+
+		} else {
+//			playTimer.cancel();
+			isPlaying=false;
+			System.out.println("Buffer Size: "+packetMap.size());
+		}
+	}
 	/**
 	 * Receives a single RTP packet and processes the corresponding frame. The
 	 * data received from the datagram socket is assumed to be no larger than
@@ -244,116 +296,52 @@ public class RTSPConnection {
 	 * called with the resulting packet. In case of timeout no exception should
 	 * be thrown and no frame should be processed.
 	 */
-	// private void receiveRTPPacket() {
-	private void receiveRTPPacket() {
+	private  void receiveRTPPacket() {
 		// TODO
-
-		this.buf = new byte[this.BUFFER_LENGTH];
-		this.packet = new DatagramPacket(this.buf, this.buf.length);
 		try {
-
-
-			//create an RTPpacket object from the DP
-//			this.RTPsocket.receive(this.packet);
-//			RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
-			
-			while (this.packetMap.size()<=50) {
-				this.RTPsocket.receive(this.packet);
-				RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
-				this.packetMap.put(rtpp.SequenceNumber, rtpp);
-			} 
-			while (this.packetMap2.size()<=50) {
-				this.RTPsocket.receive(this.packet);
-				RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
-				this.packetMap2.put(rtpp.SequenceNumber, rtpp);
-			}
-			
-			if(!this.packetMap.isEmpty()) {
-				Iterator it = this.packetMap.entrySet().iterator();
-				while(it.hasNext()) {
-					this.RTPsocket.receive(this.packet);
-					RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
-					this.packetMap2.put(rtpp.SequenceNumber, rtpp);
-
-					Map.Entry pairs = (Map.Entry) it.next();
-					RTPpacket temp = (RTPpacket) pairs.getValue();
-					System.out.println(temp.SequenceNumber);
-					Frame f = new Frame((byte)temp.PayloadType, temp.getMarker(), (short)temp.SequenceNumber, temp.TimeStamp, temp.payload);
-					session.processReceivedFrame(f);
-					
-					Thread.sleep(40);
-				}
-				this.packetMap.clear();
-			}
-			if(!this.packetMap2.isEmpty()) {
-				Iterator it = this.packetMap2.entrySet().iterator();
-				while(it.hasNext()) {
-					this.RTPsocket.receive(this.packet);
-					RTPpacket rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
-					this.packetMap.put(rtpp.SequenceNumber, rtpp);
-
-					Map.Entry pairs = (Map.Entry) it.next();
-					RTPpacket temp = (RTPpacket) pairs.getValue();
-					System.out.println(temp.SequenceNumber);
-					Frame f = new Frame((byte)temp.PayloadType, temp.getMarker(), (short)temp.SequenceNumber, temp.TimeStamp, temp.payload);
-					session.processReceivedFrame(f);
-					
-					Thread.sleep(40);
-				}
-				this.packetMap2.clear();
-			}
-////			System.out.println(rtpp.SequenceNumber);
-//			Frame f = new Frame((byte)rtpp.PayloadType, rtpp.getMarker(), (short)rtpp.SequenceNumber, rtpp.TimeStamp, rtpp.payload);;
-//			session.processReceivedFrame(f);
-			
-
-
-		} catch (SocketTimeoutException e ) {
-
-		}catch (Exception e) {
-			System.out.print(e);
-		} 
-
-		return;
-
-	}
-
-	public void bufferedPlay(TreeMap<Integer, RTPpacket> buffer1, TreeMap<Integer, RTPpacket> buffer2) {
-		try {
-			this.buf = new byte[this.BUFFER_LENGTH];
-			this.packet = new DatagramPacket(this.buf, this.buf.length);
-
-			if(buffer1.isEmpty()) {
-				while(this.i<=40) {
-					this.RTPsocket.receive(this.packet);
-					this.rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
-					buffer1.put(this.rtpp.SequenceNumber, this.rtpp);
-					this.i++;
-				}
-				this.i=0;
-			}
-			while(!buffer1.isEmpty()) {
-				Iterator it = buffer1.entrySet().iterator();
+		
+			if (packetMap.size()==25) {
+				endTime = System.currentTimeMillis();
+				elapsedPlayTime = endTime - startTime;
+				howMany25Seconds++;
+				mean25SFrames = elapsedPlayTime/howMany25Seconds;
+				mostRecentRTT = mean25SFrames/25;
+				if(estimatedRTT==0) estimatedRTT = mostRecentRTT;
+				if(highestRTT<mostRecentRTT) highestRTT=mostRecentRTT;
+				estimatedRTT =  ((1-alpha)*(double)estimatedRTT)+(alpha*(double)mostRecentRTT);
+				RTT.add(mostRecentRTT);
+				Iterator it = RTT.iterator();
+				meanRTT = 0;
 				while (it.hasNext()) {
-					Map.Entry pairs = (Map.Entry) it.next();
-					RTPpacket temp = (RTPpacket) pairs.getValue();
-					Frame f = new Frame((byte)temp.PayloadType, temp.getMarker(), (short)temp.SequenceNumber, temp.TimeStamp, temp.payload);
-					session.processReceivedFrame(f);
-
-					this.RTPsocket.receive(this.packet);
-					this.rtpp = new RTPpacket(this.packet.getData(), this.packet.getLength());
-					buffer2.put(this.rtpp.SequenceNumber, this.rtpp);
-
+					meanRTT += (Double) it.next();
 				}
+				meanRTT = meanRTT/RTT.size();
+
+				System.out.println("EstimatedRTT: "+estimatedRTT);
+				System.out.println("MostRecentRTT: "+mostRecentRTT);
+				System.out.println("MeanRTT: "+meanRTT);
 			}
-			buffer1.clear();
-			bufferedPlay(buffer2, buffer1);
+
+			RTPsocket.receive(packet);
+			RTPpacket newPacket = new RTPpacket(packet.getData(), packet.getLength());
+			packetMap.put(newPacket.TimeStamp, newPacket);
+
+			if(packetMap.size()>25) {
+				startPlayTimer();
+				isPlaying=true;
+				System.out.println("Buffer Size: "+packetMap.size());
+				//				System.out.println("time for 25:"+(System.currentTimeMillis()-startTime));
+			}
+
 		} catch (SocketTimeoutException e ) {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return;
 
 	}
+
+
 
 	/**
 	 * Sends a PAUSE request to the server. This method is responsible for
