@@ -9,7 +9,7 @@ TRANSPORT: RTP/UDP; client_port= 24400
 ---------START OF RESPONSE-------
 RTSP/1.0 200 OK
 CSeq: 1
-Session: 428950
+Session: 778883
 
 ---------END OF RESPONSE---------
 New RTSP state: READY
@@ -17,147 +17,235 @@ Play Button pressed!
 ---------START OF REQUEST---------
 PLAY movie.mjpeg RTSP/1.0
 Cseq: 2
-Session: 428950
+Session: 778883
 
 ------------END OF REQUEST------------
 ---------START OF RESPONSE-------
 RTSP/1.0 200 OK
 CSeq: 2
-Session: 428950
+Session: 778883
 
 ---------END OF RESPONSE---------
 New RTSP state: PLAYING
-EstimatedRTT: 39.0
-MostRecentRTT: 39.0
-MeanRTT: 39.0
-EstimatedRTT: 36.625
-MostRecentRTT: 20.0
-MeanRTT: 29.5
-Buffer Size: 26
-Buffer Size: 25
-EstimatedRTT: 33.671875
-MostRecentRTT: 13.0
-MeanRTT: 24.0
-Buffer Size: 26
-Buffer Size: 25
-Buffer Size: 24
-Buffer Size: 24
-Buffer Size: 23
-Buffer Size: 23
-Buffer Size: 22
-Buffer Size: 22
-Buffer Size: 21
-Buffer Size: 21
-Buffer Size: 20
-Buffer Size: 20
-Buffer Size: 19
-Buffer Size: 19
-Buffer Size: 18
-Buffer Size: 18
-Buffer Size: 17
-Buffer Size: 17
-Buffer Size: 16
-Buffer Size: 16
-Buffer Size: 15
-Buffer Size: 15
-Buffer Size: 14
-Buffer Size: 13
-Buffer Size: 13
-Buffer Size: 13
-Buffer Size: 12
-Buffer Size: 12
-Buffer Size: 11
-Buffer Size: 11
-Buffer Size: 10
-Buffer Size: 10
-Buffer Size: 9
-Buffer Size: 9
-Buffer Size: 8
-Buffer Size: 8
-Buffer Size: 7
-Buffer Size: 7
-Buffer Size: 6
-Buffer Size: 6
-Buffer Size: 5
-Buffer Size: 5
-Buffer Size: 4
-Buffer Size: 3
-Buffer Size: 3
-Buffer Size: 2
-Buffer Size: 2
-Buffer Size: 1
-Buffer Size: 1
-Buffer Size: 0
 Buffer Size: 0
 Buffer Size: 1
 Buffer Size: 1
 Buffer Size: 2
 Buffer Size: 2
+Buffer Size: 2
 Buffer Size: 3
 Buffer Size: 3
+Buffer Size: 4
 Buffer Size: 4
 Buffer Size: 4
 Buffer Size: 5
 Buffer Size: 5
 Buffer Size: 6
 Buffer Size: 6
+Buffer Size: 6
 Buffer Size: 7
 Buffer Size: 7
+Buffer Size: 8
 Buffer Size: 8
 Buffer Size: 8
 Buffer Size: 9
 Buffer Size: 9
 Buffer Size: 10
 Buffer Size: 10
+Buffer Size: 10
 Buffer Size: 11
 Buffer Size: 11
+Buffer Size: 12
 Buffer Size: 12
 Buffer Size: 12
 Buffer Size: 13
 Buffer Size: 13
 Buffer Size: 14
 Buffer Size: 14
+Buffer Size: 14
 Buffer Size: 15
 Buffer Size: 15
+Buffer Size: 16
 Buffer Size: 16
 Buffer Size: 16
 Buffer Size: 17
 Buffer Size: 17
 Buffer Size: 18
 Buffer Size: 18
+Buffer Size: 18
 Buffer Size: 19
 Buffer Size: 19
+Buffer Size: 20
 Buffer Size: 20
 Buffer Size: 20
 Buffer Size: 21
 Buffer Size: 21
 Buffer Size: 22
 Buffer Size: 22
+Buffer Size: 22
 Buffer Size: 23
 Buffer Size: 23
 Buffer Size: 24
 Buffer Size: 24
-EstimatedRTT: 33.087890625
-MostRecentRTT: 29.0
-MeanRTT: 25.25
+Buffer Size: 24
+EstimatedRTT: 96.0
+MostRecentRTT: 96.0
+MeanRTT: 96.0
 Buffer Size: 25
+EstimatedRTT: 90.0
+MostRecentRTT: 48.0
+MeanRTT: 72.0
+EstimatedRTT: 82.75
+MostRecentRTT: 32.0
+MeanRTT: 58.666666666666664
 Buffer Size: 25
-EstimatedRTT: 31.951904296875
+EstimatedRTT: 75.40625
 MostRecentRTT: 24.0
-MeanRTT: 25.0
+MeanRTT: 50.0
+EstimatedRTT: 68.48046875
+MostRecentRTT: 20.0
+MeanRTT: 44.0
 Buffer Size: 26
 Buffer Size: 25
-EstimatedRTT: 30.457916259765625
+EstimatedRTT: 62.04541015625
+MostRecentRTT: 17.0
+Buffer Size: 24
+MeanRTT: 39.5
+Buffer Size: 23
+Buffer Size: 23
+Buffer Size: 22
+Buffer Size: 22
+Buffer Size: 21
+Buffer Size: 21
+Buffer Size: 20
+Buffer Size: 19
+Buffer Size: 19
+Buffer Size: 18
+Buffer Size: 18
+Buffer Size: 17
+Buffer Size: 16
+Buffer Size: 16
+Buffer Size: 15
+Buffer Size: 15
+Buffer Size: 14
+Buffer Size: 13
+Buffer Size: 13
+Buffer Size: 12
+Buffer Size: 12
+Buffer Size: 11
+Buffer Size: 10
+Buffer Size: 10
+Buffer Size: 9
+Buffer Size: 9
+Buffer Size: 8
+Buffer Size: 7
+Buffer Size: 7
+Buffer Size: 6
+Buffer Size: 6
+Buffer Size: 5
+Buffer Size: 4
+Buffer Size: 4
+Buffer Size: 3
+Buffer Size: 3
+Buffer Size: 2
+Buffer Size: 1
+Buffer Size: 1
+Buffer Size: 0
+Buffer Size: 1
+Buffer Size: 1
+Buffer Size: 1
+Buffer Size: 2
+Buffer Size: 2
+Buffer Size: 3
+Buffer Size: 3
+Buffer Size: 3
+Buffer Size: 4
+Buffer Size: 4
+Buffer Size: 5
+Buffer Size: 5
+Buffer Size: 5
+Buffer Size: 6
+Buffer Size: 6
+Buffer Size: 7
+Buffer Size: 7
+Buffer Size: 7
+Buffer Size: 8
+Buffer Size: 8
+Buffer Size: 9
+Buffer Size: 9
+Buffer Size: 9
+Buffer Size: 10
+Buffer Size: 10
+Buffer Size: 11
+Buffer Size: 11
+Buffer Size: 11
+Buffer Size: 12
+Buffer Size: 12
+Buffer Size: 13
+Buffer Size: 13
+Buffer Size: 13
+Buffer Size: 14
+Buffer Size: 14
+Buffer Size: 15
+Buffer Size: 15
+Buffer Size: 15
+Buffer Size: 16
+Buffer Size: 16
+Buffer Size: 17
+Buffer Size: 17
+Buffer Size: 17
+Buffer Size: 18
+Buffer Size: 18
+Buffer Size: 19
+Buffer Size: 19
+Buffer Size: 19
+Buffer Size: 20
+Buffer Size: 20
+Buffer Size: 21
+Buffer Size: 21
+Buffer Size: 21
+Buffer Size: 22
+Buffer Size: 22
+Buffer Size: 23
+Buffer Size: 23
+Buffer Size: 23
+Buffer Size: 24
+Buffer Size: 24
+Buffer Size: 25
+EstimatedRTT: 58.91473388671875
+MostRecentRTT: 37.0
+MeanRTT: 39.142857142857146
+EstimatedRTT: 55.675392150878906
+MostRecentRTT: 33.0
+MeanRTT: 38.375
+Buffer Size: 25
+EstimatedRTT: 52.34096813201904
+MostRecentRTT: 29.0
+MeanRTT: 37.333333333333336
+EstimatedRTT: 49.04834711551666
+MostRecentRTT: 26.0
+MeanRTT: 36.2
+Buffer Size: 25
+EstimatedRTT: 45.91730372607708
+MostRecentRTT: 24.0
+MeanRTT: 35.09090909090909
+Buffer Size: 26
+Buffer Size: 25
+EstimatedRTT: 42.927640760317445
+MostRecentRTT: 22.0
+MeanRTT: 34.0
+EstimatedRTT: 40.061685665277764
 MostRecentRTT: 20.0
-MeanRTT: 24.166666666666668
+MeanRTT: 32.92307692307692
+Buffer Size: 24
 Buffer Size: 24
 Buffer Size: 23
-Buffer Size: 23
+Buffer Size: 22
 Buffer Size: 22
 Buffer Size: 21
 Buffer Size: 21
 Buffer Size: 20
-Buffer Size: 20
+Buffer Size: 19
 Buffer Size: 19
 Buffer Size: 18
 Buffer Size: 18
@@ -165,12 +253,14 @@ Buffer Size: 17
 Buffer Size: 16
 Buffer Size: 16
 Buffer Size: 15
+Buffer Size: 15
 Buffer Size: 14
 Buffer Size: 13
 Buffer Size: 13
 Buffer Size: 12
+Buffer Size: 12
 Buffer Size: 11
-Buffer Size: 11
+Buffer Size: 10
 Buffer Size: 10
 Buffer Size: 9
 Buffer Size: 9
@@ -178,8 +268,9 @@ Buffer Size: 8
 Buffer Size: 7
 Buffer Size: 7
 Buffer Size: 6
+Buffer Size: 6
 Buffer Size: 5
-Buffer Size: 5
+Buffer Size: 4
 Buffer Size: 4
 Buffer Size: 3
 Buffer Size: 3
@@ -187,11 +278,9 @@ Buffer Size: 2
 Buffer Size: 1
 Buffer Size: 1
 Buffer Size: 0
-Buffer Size: 0
 Buffer Size: 1
 Buffer Size: 1
 Buffer Size: 1
-Buffer Size: 2
 Buffer Size: 2
 Buffer Size: 2
 Buffer Size: 3
@@ -199,11 +288,9 @@ Buffer Size: 3
 Buffer Size: 3
 Buffer Size: 4
 Buffer Size: 4
-Buffer Size: 4
 Buffer Size: 5
 Buffer Size: 5
 Buffer Size: 5
-Buffer Size: 6
 Buffer Size: 6
 Buffer Size: 6
 Buffer Size: 7
@@ -211,60 +298,19 @@ Buffer Size: 7
 Buffer Size: 7
 Buffer Size: 8
 Buffer Size: 8
-Buffer Size: 8
-Buffer Size: 9
-Buffer Size: 9
-Buffer Size: 9
-Buffer Size: 10
-Buffer Size: 10
-Buffer Size: 10
-Buffer Size: 11
-Buffer Size: 11
-Buffer Size: 11
-Buffer Size: 12
-Buffer Size: 12
-Buffer Size: 12
-Buffer Size: 13
-Buffer Size: 13
-Buffer Size: 13
-Buffer Size: 14
-Buffer Size: 14
-Buffer Size: 14
-Buffer Size: 15
-Buffer Size: 15
-Buffer Size: 15
-Buffer Size: 16
-Buffer Size: 16
-Buffer Size: 16
-Buffer Size: 17
-Buffer Size: 17
-Buffer Size: 17
-Buffer Size: 18
-Buffer Size: 18
-Buffer Size: 18
-Buffer Size: 19
-Buffer Size: 19
-Buffer Size: 19
-Buffer Size: 20
-Buffer Size: 20
-Buffer Size: 20
-Buffer Size: 21
-Buffer Size: 21
-Buffer Size: 21
-Buffer Size: 22
-Buffer Size: 23
-Buffer Size: 23
 Teardown Button pressed !
 ---------START OF REQUEST---------
 TEARDOWN movie.mjpeg RTSP/1.0
 Cseq: 3
-Session: 428950
+Session: 778883
 
 ------------END OF REQUEST------------
 ---------START OF RESPONSE-------
 RTSP/1.0 200 OK
 CSeq: 3
-Session: 428950
+Session: 778883
 
 ---------END OF RESPONSE---------
 New RTSP state:INIT
+Buffer Size: 8
+Buffer Size: 8

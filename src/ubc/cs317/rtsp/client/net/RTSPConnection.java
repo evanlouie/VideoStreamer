@@ -235,7 +235,8 @@ public class RTSPConnection {
 
 				//				this.receiveRTPPacket();
 				//start the timer
-				this.startRTPTimer();
+				startRTPTimer();
+				startPlayTimer();
 				startTime = System.currentTimeMillis();
 				//				this.startPlayTimer();
 
@@ -260,8 +261,7 @@ public class RTSPConnection {
 			}
 		}, 0, MINIMUM_DELAY_READ_PACKETS_MS);
 	}
-	private synchronized void startPlayTimer() {
-		playTimer = new Timer();
+	private void startPlayTimer() {
 		playTimer.schedule(new TimerTask() {
 			@Override
 			public void run() {
@@ -270,20 +270,19 @@ public class RTSPConnection {
 		}, 0, 40);
 	}
 
-	private synchronized void playBuffer() {
+	private void playBuffer() {
 		if(isPlaying==true) {
-				Entry<Integer, RTPpacket> pair = packetMap.firstEntry();
-				Integer k = pair.getKey();
-				RTPpacket p = pair.getValue();
-				Frame f = new Frame((byte)p.PayloadType, p.getMarker(), (short)p.SequenceNumber, p.TimeStamp, p.payload);
-				session.processReceivedFrame(f);
-				packetMap.remove(k);
-				//			System.out.println(packetMap.size());
-				System.out.println("Buffer Size: "+packetMap.size());
-				if(packetMap.size()==0)isPlaying=false;
+			Entry<Integer, RTPpacket> pair = packetMap.firstEntry();
+			Integer k = pair.getKey();
+			RTPpacket p = pair.getValue();
+			Frame f = new Frame((byte)p.PayloadType, p.getMarker(), (short)p.SequenceNumber, p.TimeStamp, p.payload);
+			session.processReceivedFrame(f);
+			packetMap.remove(k);
+			//			System.out.println(packetMap.size());
+			System.out.println("Buffer Size: "+packetMap.size());
+			if(packetMap.size()==0)isPlaying=false;
 
 		} else {
-//			playTimer.cancel();
 			isPlaying=false;
 			System.out.println("Buffer Size: "+packetMap.size());
 		}
@@ -296,10 +295,10 @@ public class RTSPConnection {
 	 * called with the resulting packet. In case of timeout no exception should
 	 * be thrown and no frame should be processed.
 	 */
-	private  void receiveRTPPacket() {
+	private void receiveRTPPacket() {
 		// TODO
 		try {
-		
+
 			if (packetMap.size()==25) {
 				endTime = System.currentTimeMillis();
 				elapsedPlayTime = endTime - startTime;
@@ -326,9 +325,12 @@ public class RTSPConnection {
 			RTPpacket newPacket = new RTPpacket(packet.getData(), packet.getLength());
 			packetMap.put(newPacket.TimeStamp, newPacket);
 
-			if(packetMap.size()>25) {
-				startPlayTimer();
+			if(		packetMap.size()>25 &&
+					(System.currentTimeMillis()-startTime)>(howMany25Seconds*mean25SFrames) && 
+					isPlaying==false) {
 				isPlaying=true;
+				
+			
 				System.out.println("Buffer Size: "+packetMap.size());
 				//				System.out.println("time for 25:"+(System.currentTimeMillis()-startTime));
 			}
